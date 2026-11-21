@@ -955,6 +955,8 @@ class test_TCPTransport:
         See https://github.com/celery/py-amqp/issues/320
         """
 
+        self.t.sock = Mock()
+        self.t.sock.gettimeout.return_value = 0.1
         self.t._quick_recv = Mock()
 
         self.t._quick_recv.side_effect = [

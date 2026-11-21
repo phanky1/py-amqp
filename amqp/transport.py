@@ -592,6 +592,14 @@ class SSLTransport(_AbstractTransport):
                 try:
                     s = recv(n - len(rbuf))  # see note above
                 except OSError as exc:
+                    would_block = exc.errno in (
+                        errno.EAGAIN, errno.EWOULDBLOCK)
+                    if isinstance(exc, SSLError):
+                        would_block = would_block or exc.errno in (
+                            ssl.SSL_ERROR_WANT_READ, ssl.SSL_ERROR_WANT_WRITE)
+                    if would_block and self.sock.gettimeout() == 0:
+                        # Restore the partial frame in read_frame before retry.
+                        raise socket.timeout()
                     # ssl.sock.read may cause ENOENT if the
                     # operation couldn't be performed (Issue celery#1414).
                     if exc.errno in _errnos:
@@ -647,6 +655,11 @@ class TCPTransport(_AbstractTransport):
                 try:
                     s = recv(n - len(rbuf))
                 except OSError as exc:
+                    would_block = exc.errno in (
+                        errno.EAGAIN, errno.EWOULDBLOCK)
+                    if would_block and self.sock.gettimeout() == 0:
+                        # Restore the partial frame in read_frame before retry.
+                        raise socket.timeout()
                     if exc.errno in _errnos:
                         if initial and self.raise_on_initial_eintr:
                             raise socket.timeout()

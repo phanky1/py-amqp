@@ -6,6 +6,14 @@ The previous amqplib changelog is here:
 http://code.google.com/p/py-amqplib/source/browse/CHANGES
 
 
+Unreleased
+==========
+
+- Fix zero-timeout TCP and TLS reads spinning on partial frames. Raise
+  ``socket.timeout`` when a read would block, preserving the partial frame
+  for the next read.
+
+
 .. _version-5.4.2:
 
 5.4.2
